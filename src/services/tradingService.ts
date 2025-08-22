@@ -26,11 +26,14 @@ export class TradingService {
         };
 
         this.ws.onmessage = (event) => {
+          console.log('📡 WebSocket message recebida:', event.data);
+          
           try {
             const data: TradeResponse = JSON.parse(event.data);
+            console.log('📡 Dados parseados:', data);
             this.handleTradeData(data);
           } catch (error) {
-            console.error('Error while fetching data:', error);
+            console.error('❌ Erro ao processar mensagem WebSocket:', error);
           }
         };
 
@@ -52,6 +55,9 @@ export class TradingService {
 
   // Inscrição automática dos símbolos iniciais após conexão
   private static subscribeToInitialSymbols(): void {
+    console.log('📡 subscribeToInitialSymbols chamado');
+    console.log('📡 Símbolos iniciais para inscrição:', this.initialSymbols);
+    
     if (this.initialSymbols.length > 0) {
       console.log('📡 Fazendo inscrição automática dos símbolos iniciais:', this.initialSymbols);
       
@@ -62,6 +68,7 @@ export class TradingService {
       
       // Limpar símbolos iniciais após inscrição
       this.initialSymbols = [];
+      console.log('📡 Símbolos iniciais limpos após inscrição');
     } else {
       console.log('📡 Nenhum símbolo inicial para inscrição automática');
     }
@@ -84,13 +91,24 @@ export class TradingService {
 
   
   private static handleTradeData(tradeResponse: TradeResponse) {
+    console.log('📊 handleTradeData recebido:', tradeResponse);
+    
     if (tradeResponse.type === 'trade' && tradeResponse.data) {
+      console.log('📊 Processando dados de trade:', tradeResponse.data);
+      
       tradeResponse.data.forEach(trade => {
         const symbol = this.extractSymbol(trade.s);
+        console.log('📊 Trade processado - Symbol:', symbol, 'Price:', trade.p, 'Volume:', trade.v);
+        
         if (symbol && this.subscribers.has(symbol)) {
+          console.log('📊 Chamando callback para símbolo:', symbol);
           this.subscribers.get(symbol)!(trade);
+        } else {
+          console.log('📊 Símbolo não encontrado ou sem subscribers:', symbol);
         }
       });
+    } else {
+      console.log('📊 Tipo de resposta não reconhecido:', tradeResponse.type);
     }
   }
 
@@ -122,6 +140,8 @@ export class TradingService {
   
   static subscribeSymbol(symbol: string): void {
     console.log("📡 SUBSCRIBING TO SYMBOL", symbol);
+    console.log("📡 WebSocket status:", this.ws?.readyState);
+    console.log("📡 Subscribers atuais:", Array.from(this.subscribers.keys()));
     
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.warn('⚠️ WebSocket não está conectado para inscrever símbolo:', symbol);
@@ -132,6 +152,7 @@ export class TradingService {
       type: 'subscribe',
       symbol: symbol
     };
+    console.log("📡 Enviando mensagem de subscribe:", message);
     this.sendMessage(message);
   }
 

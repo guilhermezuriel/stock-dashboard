@@ -82,18 +82,29 @@ export const useTrading = (initialSymbols: string[] = []) => {
 
 
   const subscribeToSymbol = useCallback((symbol: string) => {
+    console.log('🔔 subscribeToSymbol chamado para:', symbol);
+    console.log('🔔 Estado atual - isConnected:', isConnected, 'connectionStatus:', connectionStatus);
+    console.log('🔔 Unsubscribe functions atuais:', Array.from(unsubscribeFunctions.current.keys()));
     
+    // Cancelar inscrição anterior se existir
     if (unsubscribeFunctions.current.has(symbol)) {
+      console.log('🔔 Cancelando inscrição anterior para:', symbol);
       unsubscribeFunctions.current.get(symbol)?.();
     }
+
+    // Fazer nova inscrição
     const unsubscribe = TradingService.subscribeToSymbol(symbol, (data: TradeData) => {
+      console.log('🔔 Callback executado para símbolo:', symbol, 'dados:', data);
+      
       setTradeData(prev => new Map(prev.set(symbol, data)));
       
+      // Adicionar ao histórico
       setTradeHistory(prev => {
         const newMap = new Map(prev);
         const currentHistory = newMap.get(symbol) || [];
         const newHistory = [...currentHistory, data];
         
+        // Manter apenas os últimos 1000 pontos para performance
         if (newHistory.length > 1000) {
           newHistory.splice(0, newHistory.length - 1000);
         }
@@ -102,22 +113,28 @@ export const useTrading = (initialSymbols: string[] = []) => {
         return newMap;
       });
       
+      // Atualizar crypto stock
       const previousPrice = previousPrices.current.get(symbol);
       const cryptoStock = TradingService.tradeDataToCryptoStock(data, previousPrice);
       
       setCryptoStocks(prev => new Map(prev.set(symbol, cryptoStock)));
       
+      // Atualizar preço anterior
       previousPrices.current.set(symbol, data.p);
     });
 
     unsubscribeFunctions.current.set(symbol, unsubscribe);
+    console.log('🔔 Unsubscribe function salva para símbolo:', symbol);
  
+    // Fazer subscribe no WebSocket apenas se estiver conectado E se não for um símbolo inicial
+    // Os símbolos iniciais já são inscritos automaticamente pelo TradingService
     if (isConnected && !initialSymbols.includes(symbol)) {
+      console.log('🔔 Fazendo subscribe no WebSocket para novo símbolo:', symbol);
       TradingService.subscribeSymbol(symbol);
     } else if (isConnected && initialSymbols.includes(symbol)) {
-      console.log('🔔 TradingService already subscribed to:', symbol);
+      console.log('🔔 Símbolo inicial já inscrito pelo TradingService:', symbol);
     } else {
-      console.log('⚠️ WebSocket not connected to:', symbol);
+      console.log('⚠️ Não fazendo subscribe - WebSocket não conectado para:', symbol);
     }
   }, [isConnected, connectionStatus, initialSymbols]);
 

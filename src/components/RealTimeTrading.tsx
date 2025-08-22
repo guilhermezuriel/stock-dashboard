@@ -43,16 +43,40 @@ export default function RealTimeTrading({ initialSymbols }: RealTimeTradingProps
     }
   }, [apiKey, isConnected, connect, getWebSocketUrl]); 
 
+  // Inscrição inicial de símbolos após conexão (ESSENCIAL!)
+  useEffect(() => {
+    if (apiKey && isConnected && symbols.length > 0) {
+      console.log('📡 Fazendo inscrição inicial de símbolos após conexão');
+      
+      const symbolsToSubscribe = symbols.filter(symbol => !subscribedSymbols.has(symbol));
+      
+      if (symbolsToSubscribe.length > 0) {
+        console.log('📡 Símbolos para inscrição inicial:', symbolsToSubscribe);
+        symbolsToSubscribe.forEach(symbol => {
+          console.log('📡 Inscrevendo símbolo inicial:', symbol);
+          subscribeToSymbol(symbol);
+          setSubscribedSymbols(prev => new Set([...prev, symbol]));
+        });
+        
+        storageInitialSymbols(symbols);
+        toast.success(`${symbolsToSubscribe.length} símbolo(s) inscrito(s) com sucesso!`);
+      }
+    }
+  }, [apiKey, isConnected]); // Removido symbols e subscribedSymbols para evitar execução desnecessária
+
   useEffect(() => {
     if (isConnected) {
       toast.success('WebSocket conectado com sucesso!');
     } else if (connectionStatus === 'CLOSED' && symbols.length > 0) {
       toast.error('WebSocket desconectado');
     }
-  }, [isConnected, connectionStatus]); 
+  }, [isConnected, connectionStatus]);
 
   const handleAddSymbol = useCallback((symbol: string) => {
-
+    console.log('🎯 handleAddSymbol chamado com:', symbol);
+    console.log('🎯 symbols atuais:', symbols);
+    console.log('🎯 isConnected:', isConnected);
+    console.log('🎯 Símbolos já inscritos:', Array.from(subscribedSymbols));
     
     if (!symbols.includes(symbol)) {
       console.log('🎯 Adicionando novo símbolo:', symbol);
@@ -67,6 +91,7 @@ export default function RealTimeTrading({ initialSymbols }: RealTimeTradingProps
         subscribeToSymbol(symbol);
         setSubscribedSymbols(prev => new Set([...prev, symbol]));
         
+        // Notificação de sucesso
         toast.success(`Símbolo ${symbol} adicionado com sucesso!`);
       } else {
         console.log('🎯 Não inscrevendo - WebSocket não conectado para:', symbol);
@@ -197,8 +222,9 @@ export default function RealTimeTrading({ initialSymbols }: RealTimeTradingProps
             </thead>
             <tbody>
               {isConnected && symbols.map(symbol => {
-                console.log('🔄 Symbol:', symbol);
+                console.log('🎯 symbol:', symbol);
                 const data = tradeData.get(symbol);
+                console.log('🎯 data:', data);
                 const isNewlyAdded = newlyAddedSymbols.has(symbol);
                 return (
                   <tr key={symbol} className={`border-b border-dark-600 hover:bg-dark-700 transition-all duration-300 ${
