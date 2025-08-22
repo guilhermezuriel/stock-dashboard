@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-dark-900 text-white;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-primary {
+    @apply bg-navy-600 text-white hover:bg-navy-700 focus:ring-navy-500;
+  }
+  
+  .btn-secondary {
+    @apply bg-success-600 text-white hover:bg-success-700 focus:ring-success-500;
+  }
+  
+  .btn-outline {
+    @apply bg-transparent text-navy-400 border-navy-400 hover:bg-navy-900/50 focus:ring-navy-400;
+  }
+  
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  
+  .card {
+    @apply bg-dark-800 rounded-xl shadow-xl border border-dark-700 hover:shadow-2xl transition-shadow duration-200;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-dark-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-400 focus:border-transparent transition-all duration-200 bg-dark-700 text-white placeholder-gray-400;
+  }
+  
+  .status-indicator {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .status-connected {
+    @apply bg-success-900/50 text-success-300 border border-success-700;
+  }
+  
+  .status-connecting {
+    @apply bg-warning-900/50 text-warning-300 border border-warning-700;
+  }
+  
+  .status-disconnected {
+    @apply bg-danger-900/50 text-danger-300 border border-danger-700;
+  }
+}
